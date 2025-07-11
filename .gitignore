@@ -2,7 +2,7 @@
 node_modules/
 
 # TypeScript compiled files
-*.js
+#*.js
 !jest.config.js
 *.d.ts
 
@@ -11,9 +11,9 @@ node_modules/
 cdk.out/
 
 # Lambda build output
-lambda/**/dist/
-lambda/**/node_modules/
-lambda/**/package-lock.json
+#lambda/**/dist/
+#lambda/**/node_modules/
+#lambda/**/package-lock.json
 
 # Backup files and large local assets
 assets/StackOverflow.bak
