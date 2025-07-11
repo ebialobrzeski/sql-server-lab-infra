@@ -1,0 +1,49 @@
+# Node modules
+node_modules/
+
+# TypeScript compiled files
+*.js
+!jest.config.js
+*.d.ts
+
+# CDK asset staging and output directories
+.cdk.staging/
+cdk.out/
+
+# Lambda build output
+lambda/**/dist/
+lambda/**/node_modules/
+lambda/**/package-lock.json
+
+# Backup files and large local assets
+assets/StackOverflow.bak
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# IDE and editor files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+
+# Testing
+coverage/
+jest-cache/
+.nyc_output/
+
+# AWS config
+.aws/
+
+# OS-specific files
+*.AppleDouble
+*.LSOverride
+Icon?
