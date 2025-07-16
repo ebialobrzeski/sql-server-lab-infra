@@ -30,7 +30,7 @@ exports.handler = async function(event, context) {
       database: 'master',
       options: {
         encrypt: true,
-        trustServerCertificate: false
+        trustServerCertificate: true
       }
     });
 

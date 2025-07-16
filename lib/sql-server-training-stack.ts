@@ -62,16 +62,6 @@ export class SqlServerTrainingStack extends Stack {
       }
     });
 
-    new CfnOutput(this, `${scopePrefix}-SqlAdminSecretOutput`, {
-      value: adminSecret.secretName,
-      exportName: `${scopePrefix}-SqlAdminSecretName`
-    });
-
-    new CfnOutput(this, `${scopePrefix}-SecretRetrievalHint`, {
-      value: `aws secretsmanager get-secret-value --secret-id ${adminSecret.secretName} --query SecretString --output text`,
-      description: 'Command to retrieve SQL admin credentials from Secrets Manager.'
-    });
-
     const encryptionKey = new kms.Key(this, `${scopePrefix}-RdsStorageKey`, {
       enableKeyRotation: true
     });
@@ -124,11 +114,12 @@ export class SqlServerTrainingStack extends Stack {
       autoMinorVersionUpgrade: true,
       parameterGroup,
       optionGroup,
-      instanceIdentifier: `${scopePrefix}-sql-instance`
+      instanceIdentifier: `${scopePrefix}-sql-instance`,
+      characterSetName: 'Latin1_General_CI_AS'
     });
 
     const restoreLambda = new lambda.Function(this, `${scopePrefix}-RestoreLambda`, {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/restore-sql-js')),
       timeout: Duration.minutes(5),
@@ -145,10 +136,6 @@ export class SqlServerTrainingStack extends Stack {
     });
 
     adminSecret.grantRead(restoreLambda);
-    restoreLambda.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['rds-data:ExecuteStatement'],
-      resources: ['*']
-    }));
 
     securityGroup.addIngressRule(restoreLambda.connections.securityGroups[0], ec2.Port.tcp(1433), 'Allow Lambda to access SQL Server');
 
@@ -167,16 +154,12 @@ export class SqlServerTrainingStack extends Stack {
     securityGroup.addIngressRule(bastionSg, ec2.Port.tcp(1433), 'Allow Bastion to access SQL Server');
 
     const bastionUserData = ec2.UserData.forLinux();
-    bastionUserData.addCommands(
-      'sudo systemctl enable amazon-ssm-agent',
-      'sudo systemctl start amazon-ssm-agent'
-    );
 
     const bastionInstance = new ec2.Instance(this, `${scopePrefix}-BastionHost`, {
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
-      machineImage: ec2.MachineImage.latestAmazonLinux2(),
+      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
       securityGroup: bastionSg,
       role: bastionRole,
       userData: bastionUserData,
@@ -190,19 +173,20 @@ export class SqlServerTrainingStack extends Stack {
       ]
     });
 
-    new CfnOutput(this, `${scopePrefix}-SqlInstanceEndpoint`, {
-      value: rdsInstance.dbInstanceEndpointAddress,
-      exportName: `${scopePrefix}-SqlInstanceEndpoint`
-    });
-
     new CfnOutput(this, `${scopePrefix}-PortForwardingHint`, {
       value: `aws ssm start-session --target ${bastionInstance.instanceId} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host="${rdsInstance.dbInstanceEndpointAddress}",portNumber="1433",localPortNumber="1433"`,
       description: 'Command to start a port forwarding session to SQL Server via bastion host.'
+    });
+
+    new CfnOutput(this, `${scopePrefix}-SecretRetrievalHint`, {
+      value: `aws secretsmanager get-secret-value --secret-id ${adminSecret.secretName} --query SecretString --output text`,
+      description: 'Command to retrieve SQL admin credentials from Secrets Manager.'
     });
 
     new CfnOutput(this, `${scopePrefix}-LambdaInvokeCommand`, {
       value: `aws lambda invoke --function-name ${restoreLambda.functionName} --payload '{}' response.json`,
       description: 'Command to manually trigger restore Lambda.'
     });
+
   }
 }
