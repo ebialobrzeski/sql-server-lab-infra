@@ -10,7 +10,7 @@ This project provisions an isolated environment on AWS for SQL Server training u
 - AWS CLI with a configured profile (e.g. using `aws-vault`)
 - CDK CLI (`npm install -g aws-cdk`)
 - Git
-- `npm install` run at the project root
+- `npm install` run at the project root and lambda/restore-sql-js
 
 ---
 
