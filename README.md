@@ -30,7 +30,9 @@ This project provisions an isolated environment on AWS for SQL Server training u
    ```
 
 3. **Install dependencies for lambda**
+   
    in lambda/restore-sql-js directory
+
    ```bash
    npm install
    ```
