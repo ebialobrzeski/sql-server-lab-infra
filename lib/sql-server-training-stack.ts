@@ -187,6 +187,5 @@ export class SqlServerTrainingStack extends Stack {
       value: `aws lambda invoke --function-name ${restoreLambda.functionName} --payload '{}' response.json`,
       description: 'Command to manually trigger restore Lambda.'
     });
-
   }
 }
